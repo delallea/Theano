@@ -280,11 +280,11 @@ class PushOutNonSeqScan(gof.Optimizer):
             return False
 
 
-scan_seqopt.register('scanOp_pushout_nonseqs_ops',
-                     PushOutNonSeqScan(),
-                     1,
-                     'fast_run',
-                     'scan')
+#scan_seqopt.register('scanOp_pushout_nonseqs_ops',
+#                     PushOutNonSeqScan(),
+#                     1,
+#                     'fast_run',
+#                     'scan')
 
 
 @gof.local_optimizer([None])
