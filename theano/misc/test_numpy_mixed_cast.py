@@ -20,22 +20,22 @@ from theano import tensor
 def main():
 
     type_combinations = [
-            ('uint32', 'int32'),
+            ('int8', 'int32'),
             ]
 
     values = {
             'uint32': [0, 1, 2],
-            'int8': [0, 1, 2, -1, 2**7 - 1, -2**7],
+            'int8': [0, 1, 2**7 - 1, -2**7],
             'int16': [0, 1, -1, 2**7 - 1, -2**7],
-            #'int32': [0, 1, -1, 2**7 - 1, -2**7, 2**7, -2**7 - 1, 2**31 - 1, -2**31],
+            'int32': [0, 1, -1, 2**7 - 1, -2**7, 2**7, -2**7 - 1, 2**31 - 1, -2**31],
             #'int32': [1, 2**1, 2**2, 2**3, 2**4, 2**5, 2**6, 2**6 + 1, 100, 126, 2**7 - 1, 2**7],
             #'int32': [126, 127, 128],
-            'int32': [0, 1, -1],
+            #'int32': [0, 1, -1],
             }
 
     for op in (
             operator.add,
-            operator.sub,
+            #operator.sub,
             ):
         for array_type, scalar_type in type_combinations:
             for array_val in values[array_type]:
