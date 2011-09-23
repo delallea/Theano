@@ -39,9 +39,7 @@ def main():
                             op, array, array_type, scalar, scalar_type,
                             output, output.dtype)
 
-
     return 0
 
 if __name__ == '__main__':
     sys.exit(main())
-
