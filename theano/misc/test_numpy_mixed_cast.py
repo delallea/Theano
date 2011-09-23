@@ -43,7 +43,7 @@ def main():
                     array = numpy.array([array_val] * 2, dtype=array_type)
                     scalar = numpy.array(scalar_val, dtype=scalar_type)
                     output = op(array, scalar)
-                    print '%s: %s (%s) + %s (%s) -> %s (%s)' % (
+                    print '%s: %s (%s) / %s (%s) -> %s (%s)' % (
                             op, array, array_type, scalar, scalar_type,
                             output, output.dtype)
 
