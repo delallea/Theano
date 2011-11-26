@@ -8,10 +8,15 @@ To read about what theano graphs are from a user perspective, have a look at
 
 __docformat__ = "restructuredtext en"
 
-from copy import copy
-from theano.gof import deque
 
-import utils
+from copy import copy
+
+from theano.gof import deque, utils
+
+# Lazy imports to avoid circular dependencies.
+is_same_graph_with_merge = None
+equal_computations = None
+
 
 class Apply(utils.object2):
     """
@@ -683,6 +688,46 @@ def io_toposort(i, o, orderings = {}):
 default_leaf_formatter = str
 default_node_formatter = lambda op, argstrings: "%s(%s)" % (op.op,
                                                             ", ".join(argstrings))
+
+
+def is_same_graph(var1, var2, ignore_inputs=False):
+    """
+    Return True iff Variables 'var1' and 'var2' perform the same computation.
+
+    The current implementation is not efficient since it verifies equality by
+    calling two different functions that are expected to return the same
+    output. The goal is to verify this assumption, to eventually get rid of
+    one of them in the future.
+
+    :param var1: The first Variable to compare.
+
+    :param var2: The second Variable to compare.
+
+    :param ignore_inputs: If True, then ignore differences among inputs of the
+    graphs as long as they have the same type.
+    """
+    # Lazy import.
+    global equal_computations, is_same_graph_with_merge
+    if equal_computations is None:
+        from theano.gof.opt import is_same_graph_with_merge
+        from theano.scan_module.scan_utils import equal_computations
+    # Get result from the merge-based function.
+    rval1 = is_same_graph_with_merge(var1=var1, var2=var2,
+                                     ignore_inputs=ignore_inputs)
+    # Get result from the function from scan_utils.
+    if ignore_inputs:
+        in_xs = inputs([var1])
+        in_ys = inputs([var2])
+        if len(in_xs) != len(in_ys):
+            # Not the same number of inputs, no need to go further.
+            return False
+    else:
+        in_xs = None
+        in_ys = None
+    rval2 = equal_computations(xs=[var1], ys=[var2], in_xs=in_xs, in_ys=in_ys)
+    assert rval1 == rval2
+    return rval1
+
 
 def op_as_string(i, op,
                  leaf_formatter = default_leaf_formatter,

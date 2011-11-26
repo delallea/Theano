@@ -5,6 +5,7 @@ amount of useful generic optimization tools.
 
 
 import copy, logging, sys, time
+from itertools import izip
 
 import numpy
 
@@ -249,13 +250,13 @@ class MergeOptimizer(Optimizer):
     """
     Merges parts of the graph that are identical and redundant.
 
-    The basic principle is that if two Applies have ops that compare equal, and identical
-    inputs, then they do not both need to be computed.  The clients of one are transfered to
-    the other and one of them is removed from the graph.  This procedure is carried out in
-    input->output order through the graph.
+    The basic principle is that if two Applies have ops that compare equal, and
+    identical inputs, then they do not both need to be computed. The clients of
+    one are transferred to the other and one of them is removed from the graph.
+    This procedure is carried out in input->output order through the graph.
 
-    The first step of merging is constant-merging, so that all clients of an int(1) for example,
-    are transfered to a particular instance of int(1).
+    The first step of merging is constant-merging, so that all clients of an
+    int(1) for example, are transferred to a particular instance of int(1).
     """
     def __init__(self, skip_const_merge=False):
         self.skip_const_merge = skip_const_merge
@@ -347,6 +348,33 @@ class MergeOptimizer(Optimizer):
         self.apply_node_merge(env)
 
 merge_optimizer = MergeOptimizer()
+
+
+def is_same_graph_with_merge(var1, var2, ignore_inputs=False):
+    """
+    Merge-based implementation of 'theano.gof.graph.is_same_graph'.
+
+    See help on 'theano.gof.graph.is_same_graph' for additional documentation.
+    """
+    # Copy variables since the MergeOptimizer will modify them.
+    vars_copy = copy.deepcopy([var1, var2])
+    # Create Env.
+    inputs = theano.gof.graph.inputs(vars_copy)
+    e = theano.gof.env.Env(inputs, vars_copy)
+    # Replace inputs if we asked for it.
+    if ignore_inputs:
+        for i1, i2 in izip(theano.gof.graph.inputs([vars_copy[0]]),
+                           theano.gof.graph.inputs([vars_copy[1]])):
+            if i1.type != i2.type:
+                return False
+            if i1 is not i2:
+                e.replace(i1, i2)
+    # Perform merge optimization.
+    merge_optimizer.optimize(e)
+    # When two variables perform the same computations, they will have the same
+    # owner in the optimized graph.
+    return vars_copy[0].owner is vars_copy[1].owner
+
 
 def MergeOptMerge(opt):
     """WRITEME
