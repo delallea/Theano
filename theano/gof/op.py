@@ -424,22 +424,22 @@ class PureOp(object):
                 try:
                     required = thunk()
                     success = True
-                except utils.MethodNotDefined, e:
-                    # May happen if the op has neither a C nor a Python
-                    # implementation.
+                except Exception:
                     success = False
-                    if e.args and e.args[0] == 'perform':
-                        if config.compute_test_value == 'warn':
-                            warnings.warn(
-                                "Cannot compute test value: Op %s does not "
-                                "have a 'perform' method" %
-                                e.args[2], stacklevel=2)
-                        elif config.compute_test_value == 'ignore':
-                            pass
-                        else:
-                            raise
-                    else:
+                    # Behavior in case of failure depends on the value of
+                    # 'config.compute_test_value'.
+                    if config.compute_test_value == 'raise':
                         raise
+                    elif config.compute_test_value == 'warn':
+                        warnings.warn(
+                            "Failed to compute test value:\n%s" %
+                            '\n'.join(traceback.format_exception(
+                                                        **sys.exc_info()[2])),
+                            stacklevel=2)
+                    elif config.compute_test_value == 'ignore':
+                        pass
+                    else:
+                        raise NotImplementedError(config.compute_test_value)
 
                 if success:
                     assert not required  # We provided all inputs
