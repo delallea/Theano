@@ -1521,8 +1521,9 @@ class GCC_compiler(object):
             print >> sys.stderr, ' '.join(cmd)
 
         try:
-            p = subprocess.Popen(cmd, stderr=subprocess.PIPE)
-            compile_stderr = p.communicate()[1]
+            compile_stderr = ''
+            p = subprocess.Popen(cmd)
+            p.communicate()
         except Exception:
             # An exception can occur e.g. if `g++` is not found.
             print_command_line_error()
